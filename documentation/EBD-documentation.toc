@@ -1,0 +1,65 @@
+\boolfalse {citerequest}\boolfalse {citetracker}\boolfalse {pagetracker}\boolfalse {backtracker}\relax 
+\defcounter {refsection}{0}\relax 
+\contentsline {chapter}{Contents}{i}{section*.1}%
+\defcounter {refsection}{0}\relax 
+\contentsline {chapter}{List of Figures}{ii}{section*.2}%
+\defcounter {refsection}{0}\relax 
+\contentsline {chapter}{\chapternumberline {1}Tool Audience}{1}{chapter.1}%
+\defcounter {refsection}{0}\relax 
+\contentsline {chapter}{\chapternumberline {2}Introduction}{2}{chapter.2}%
+\defcounter {refsection}{0}\relax 
+\contentsline {chapter}{\chapternumberline {3}Installation Instructions}{3}{chapter.3}%
+\defcounter {refsection}{0}\relax 
+\contentsline {section}{\numberline {3.1}Installing the Elastic Body Dynamics Tool}{3}{section.3.1}%
+\defcounter {refsection}{0}\relax 
+\contentsline {section}{\numberline {3.2}Compiling the Source Code in OpenFOAM}{3}{section.3.2}%
+\defcounter {refsection}{0}\relax 
+\contentsline {chapter}{\chapternumberline {4}Theory}{5}{chapter.4}%
+\defcounter {refsection}{0}\relax 
+\contentsline {section}{\numberline {4.1}Introduction}{5}{section.4.1}%
+\defcounter {refsection}{0}\relax 
+\contentsline {section}{\numberline {4.2}Elastic body dynamics library}{6}{section.4.2}%
+\defcounter {refsection}{0}\relax 
+\contentsline {subsection}{\numberline {4.2.1}generalizedMotionState}{6}{subsection.4.2.1}%
+\defcounter {refsection}{0}\relax 
+\contentsline {subsection}{\numberline {4.2.2}generalizedSolver}{7}{subsection.4.2.2}%
+\defcounter {refsection}{0}\relax 
+\contentsline {subsection}{\numberline {4.2.3}generalizedMotion}{8}{subsection.4.2.3}%
+\defcounter {refsection}{0}\relax 
+\contentsline {subsection}{\numberline {4.2.4}sixDoFElasticBodyMotion}{8}{subsection.4.2.4}%
+\defcounter {refsection}{0}\relax 
+\contentsline {subsection}{\numberline {4.2.5}sixDoFElasticBodyMotionSolver}{13}{subsection.4.2.5}%
+\defcounter {refsection}{0}\relax 
+\contentsline {subsection}{\numberline {4.2.6}threeDoFElasticBodyMotionSolver}{15}{subsection.4.2.6}%
+\defcounter {refsection}{0}\relax 
+\contentsline {subsection}{\numberline {4.2.7}fourDoFElasticBodyMotionSolver}{15}{subsection.4.2.7}%
+\defcounter {refsection}{0}\relax 
+\contentsline {subsection}{\numberline {4.2.8}vector6D}{15}{subsection.4.2.8}%
+\defcounter {refsection}{0}\relax 
+\contentsline {subsection}{\numberline {4.2.9}binnedForces}{16}{subsection.4.2.9}%
+\defcounter {refsection}{0}\relax 
+\contentsline {chapter}{\chapternumberline {5}Usage}{18}{chapter.5}%
+\defcounter {refsection}{0}\relax 
+\contentsline {section}{\numberline {5.1}Workflow}{18}{section.5.1}%
+\defcounter {refsection}{0}\relax 
+\contentsline {section}{\numberline {5.2}Parameters}{18}{section.5.2}%
+\defcounter {refsection}{0}\relax 
+\contentsline {chapter}{\chapternumberline {6}Demonstration}{20}{chapter.6}%
+\defcounter {refsection}{0}\relax 
+\contentsline {section}{\numberline {6.1}Introduction}{20}{section.6.1}%
+\defcounter {refsection}{0}\relax 
+\contentsline {section}{\numberline {6.2}VIV of a rigid circular cylinder}{20}{section.6.2}%
+\defcounter {refsection}{0}\relax 
+\contentsline {subsection}{\numberline {6.2.1}Case setup introduction}{20}{subsection.6.2.1}%
+\defcounter {refsection}{0}\relax 
+\contentsline {subsection}{\numberline {6.2.2}Procedure}{20}{subsection.6.2.2}%
+\defcounter {refsection}{0}\relax 
+\contentsline {subsection}{\numberline {6.2.3}Results}{26}{subsection.6.2.3}%
+\defcounter {refsection}{0}\relax 
+\contentsline {section}{\numberline {6.3}VIV of a elastic circular cylinder}{29}{section.6.3}%
+\defcounter {refsection}{0}\relax 
+\contentsline {subsection}{\numberline {6.3.1}Case setup introduction}{29}{subsection.6.3.1}%
+\defcounter {refsection}{0}\relax 
+\contentsline {subsection}{\numberline {6.3.2}Procedure}{30}{subsection.6.3.2}%
+\defcounter {refsection}{0}\relax 
+\contentsline {subsection}{\numberline {6.3.3}Results}{32}{subsection.6.3.3}%

@@ -1,0 +1,497 @@
+\label{sec:EBD-theory}
+
+\section{Introduction}
+
+This section introduces the use of the elasticBodyDynamics library in the open-source computational fluid dynamics (CFD) code, OpenFOAM. The library is developed for solving the motion of a deformable body subjected to aerodynamic loads in which the body can be modeled as an elastic beam, and transform the dynamic finite volume mesh to cope with the motion of the body. The beam is assumed to have tension, compression, torsion and bending capabilities. It has six degrees of freedom at each point (or node) on the beam: translations in the $x$, $y$ and $z$ directions and rotations about the $x$, $y$ and $z$ axes. Based on theories on structural dynamics, the motion equation of such a beam model can be expressed as 
+
+\begin{equation} \label{motionEquation}
+\boldsymbol{M}\ddot{\boldsymbol{Y}}(t)+\boldsymbol{C}\dot{\boldsymbol{Y}}(t)+\boldsymbol{K}\boldsymbol{Y}(t) = \boldsymbol{P}(t)
+\end{equation}
+
+\noindent In (\ref{motionEquation}), $\boldsymbol{Y}$ and $\boldsymbol{P}$ represents the vectors of the generalized displacements and (aerodynamic) loads, respectively. $\boldsymbol{M}$, $\boldsymbol{C}$ and $\boldsymbol{K}$ denote the generalized mass, damping ratio and stiffness diagonal matrices with the $i$-th diagonal elements, respectively, given by
+
+\begin{equation}
+M_i = \boldsymbol{\phi}_i^T\boldsymbol{m}\boldsymbol{\phi}_i, \quad
+K_i = \omega_i^2M_i, \quad
+C_i = 2\zeta_i\omega_iM_i
+\end{equation}
+
+\noindent where $\boldsymbol{m}$ is the mass matrix, $\omega_n$ denotes the natural frequency of the $n$-th vibration mode and $\boldsymbol{\phi}_i$ stands for a vector storing the shape of the $i$-th vibration mode. Meanwhile, the generalized load associated with the $i$-th mode admits the form
+
+\begin{equation}
+P_i(t) = \boldsymbol{\phi}_i^T\boldsymbol{p}(t)
+\end{equation}
+
+\noindent where $\boldsymbol{p}(t)$ is the vector of aerodynamic loads. After the solution of the motion equation (\ref{motionEquation}), the overall displacement of the system can be computed from
+
+\begin{equation}
+\boldsymbol{v}(t) = \boldsymbol{\varPhi}\boldsymbol{Y}(t)
+\end{equation}
+
+\noindent in which
+
+\begin{equation}
+\boldsymbol{\varPhi} = \left(\boldsymbol{\phi}_1,\boldsymbol{\phi}_2,...,\boldsymbol{\phi}_n\right).
+\end{equation}
+
+The main objectives of the developed elasticBodyDynamics library includes solving the motion equation (\ref{motionEquation}), computing the displacements of the elastic body and updating the dynamic mesh to cope with the relative motion of the body inside the computational domain. The matrices $\boldsymbol{M}$, $\boldsymbol{C}$ and $\boldsymbol{K}$ involved in (\ref{motionEquation}) are determined from $\boldsymbol{m}$, $\zeta$ and $\boldsymbol{\varPhi}$, all of which require the input from users. On the other hand, the fluid solvers available in OpenFOAM are responsible for the computation of $\boldsymbol{p}(t)$ through solving the fluid equations (e.g., the Navier-Stokes equation and the continuity equation) that govern the flow around the elastic body.
+
+\section{Elastic body dynamics library}
+
+In this section, the elasticBodyDynamics library will be explored. For the ease of understanding of the readers, it is divided into two parts, main files and auxiliary files. The main files include the generalizedMotionState, generalizedSolver, generalizedMotion, sixDoFElasticBodyMotion and sixDoFElasticBodyMotion classes. The auxiliary files include the vector6D and binnedForces classes.
+
+\subsection{generalizedMotionState}
+
+The generalizedMotionState class holds the generalized motion state of an elastic body. The generalized motion state of the body includes the generalized displacement, velocity and acceleration, all of which are stored in a list of scalars, respectively. The number of the elements in each list equals to the number of vibration modes considered during the calculation.
+
+\begin{lstlisting}
+class generalizedMotionState
+{
+    // Private data
+
+        //- Generalized displacement of beam
+        List<scalar> ubar_;
+
+        //- Generalized velocity of beam
+        List<scalar> vbar_;
+
+        //- Generalized acceleration of beam
+        List<scalar> abar_;
+\end{lstlisting}
+
+\noindent The initial values of the generalized, velocity and acceleration can be entered in a file named as generalizedMotionState (the location of this file will be discussed later) using the keywords ubar, vbar and abar, respectively, as can be seen from the following lines presented in generalizedMotionState.C:
+
+\begin{lstlisting}
+Foam::generalizedMotionState::generalizedMotionState
+(
+    const dictionary& dict
+)
+{
+    ITstream& is = dict.lookup("ubar");
+    is >> static_cast<List<scalar>&>(ubar_);
+
+    is = dict.lookup("vbar");
+    is >> static_cast<List<scalar>&>(vbar_);
+
+    is = dict.lookup("abar");
+    is >> static_cast<List<scalar>&>(abar_);
+}
+\end{lstlisting}
+
+\subsection{generalizedSolver}
+
+The generalizedSolver class contains several different methods that can be used to solve the motion equation (\ref{motionEquation}). The solvers contained in this class are:
+
+\begin{itemize}
+
+\item Crank Nicholson
+\item Newmark
+\item Symplectic
+
+\end{itemize}
+
+\noindent  One of these solvers can be chosen according to requirements of the problem to be solved. Such information has to be entered in the dynamicMeshDict dictionary under the solver sub-dictionary. Taking the following lines in Newmark.C for demonstration, 
+
+\begin{lstlisting}
+void Foam::generalizedSolvers::Newmark::solve
+(
+    bool firstIter,
+    const List<scalar>& fbar,
+    scalar deltaT,
+    scalar deltaT0
+)
+{
+    // Update the linear acceleration and torque
+    updateAcceleration(fbar);
+
+    // Correct velocity
+    vbar() = vbar0() + deltaT*(gamma_*abar() + (1 - gamma_)*abar0());
+
+    // Correct displacement
+    ubar() = ubar0() + deltaT*vbar0() + sqr(deltaT)*(beta_*abar() + (0.5 - beta_)*abar0());
+}
+\end{lstlisting}
+
+\noindent the member function (named as `solver') updates the generalized displacement, velocity and acceleration of the elastic body taking the generalized load, the current and the previous time-step sizes as the input variables.
+
+\subsection{generalizedMotion}
+
+The generalizedMotion class calls generalizedSolver and generalizedMotionState to compute and print the generalized motion state of the elastic body in each time step, as can be seen in the following lines of generalizedMotion.C:
+
+\begin{lstlisting}
+void Foam::generalizedMotion::solve
+(
+    bool firstIter,
+    const List<scalar>& fbar,
+    scalar deltaT,
+    scalar deltaT0
+)
+{
+    if (Pstream::master())
+    {
+        solver_->solve(firstIter, fbar, deltaT, deltaT0); 
+
+        if (report_)
+        {
+            Info<< "generalized motion" << nl
+                << "    generalized load: " << fbar << nl;
+
+            status();
+        }
+    }
+
+    Pstream::scatter(motionState_);
+}
+\end{lstlisting}
+
+\subsection{sixDoFElasticBodyMotion}
+
+The sixDoFElasticBodyMotion class is a derived class of the generalizedMotion class. It is used to create a system of an elastic beam with six degrees of freedom at each node on the beam. The initialization of such a system requires a list of inputs defined in the dynamicMeshDict (more details regarding those inputs are summarized in Table). The beam is established by connecting a set of nodes with line elements. The nodes are located on a line segment based on the origin and spacing (i.e., the variable with the keywords `origin' and `length', respectively) provided by users. Users are also asked to the specify the information (including the mode shape, natural frequency and damping ratio) of all vibration modes involved in the solution the motion equation of the body.
+
+After obtaining the above mentioned information, the sixDoFElasticBodyMotion class then computes the generalized mass, stiffness and damping ratio of the elastic body during the initialization, which can be seen in the following lines of sixDoFElasticBodyMotion.C:
+
+\begin{lstlisting}
+Foam::sixDoFElasticBodyMotion::sixDoFElasticBodyMotion
+(
+    const dictionary& dict,
+    const dictionary& stateDict
+)
+:
+    origin_(dict.lookupOrDefault<vector>("origin", Zero)),
+    direction_(dict.lookupOrDefault<vector>("direction", vector(0,0,1))),
+    nNode_(dict.lookupOrDefault<label>("nNode", Zero)),
+    nMode_(dict.lookupOrDefault<label>("nMode", Zero)),
+    frequency_(dict.lookup("frequency")),
+    dampingRatio_(dict.lookup("dampingRatio")),
+    mass_(dict.lookup("mass")),
+    length_(dict.lookup("length")),
+    gMotion_(dict, stateDict, nMode_)
+{
+    mode_.setSize(nMode_);
+
+    forAll(mode_, indi)
+    {
+        word imode(std::to_string(indi+1));
+        word modeName("mode"+imode);
+
+        ITstream& is = dict.lookup(modeName);
+        is >> static_cast<List<vector6D>&>(mode_[indi]);
+
+        gMotion_.mbar()[indi] = sum(mass_&mode_[indi]);
+        gMotion_.kbar()[indi] = gMotion_.mbar()[indi]*
+        sqr(constant::mathematical::twoPi*frequency_[indi]);
+        gMotion_.cbar()[indi] = 2.0*constant::mathematical::twoPi*
+        gMotion_.mbar()[indi]*dampingRatio_[indi]*frequency_[indi];
+    }
+
+    Info<< "generalized mass: " << gMotion_.mbar() << nl
+        << "generalized stiffness: " << gMotion_.kbar() << nl
+        << "generalized damping: " << gMotion_.cbar() << nl
+        << "generalized displacement: " << gMotion_.state().ubar() << nl
+        << "generalized velocity: " << gMotion_.state().vbar() << nl
+        << "generalized acceleration: " << gMotion_.state().abar() << nl
+        << endl;
+}
+\end{lstlisting}
+
+During the simulation, the sixDoFElasticBodyMotion class calculates the generalized load taking the (fluid-induced) forces and moments acting on each individual beam element as the input variables
+
+\begin{lstlisting}
+Foam::List<Foam::scalar> Foam::sixDoFElasticBodyMotion::updateGeneralizedForces
+(
+    const List<vector> forces,
+    const List<vector> moments
+)
+{
+    List<scalar> fbar(nMode(), Zero);
+    List<vector6D> nodalForces(nNode(), vector6D::zero);
+
+    forAll(nodalForces, indi)
+    {
+        if (indi == 0)
+        {                       
+            nodalForces[indi] = 0.5*vector6D(forces[indi], moments[indi]);
+        }
+        else if (indi == nNode()-1)
+        {
+            nodalForces[indi] = 0.5*vector6D(forces[indi-1], moments[indi-1]);
+        }
+        else
+        {
+            nodalForces[indi] = 0.5*(vector6D(forces[indi], moments[indi])+vector6D(forces[indi-1], moments[indi-1]));
+        }
+    }
+
+    for (label indi = 0; indi < nMode(); indi++)
+    {
+        fbar[indi] = sum(nodalForces&mode()[indi]);
+    }
+
+    return fbar;
+}
+\end{lstlisting}
+
+\noindent and update the generalized motion state of the elastic body using a member function named as update
+
+\begin{lstlisting}
+void Foam::sixDoFElasticBodyMotion::update
+(
+    bool firstIter,
+    const List<vector> forces,
+    const List<vector> moments,
+    scalar deltaT,
+    scalar deltaT0
+)
+{
+    const List<scalar> fbar(updateGeneralizedForces(forces, moments));
+
+    gMotion_.solve
+    (
+        firstIter,
+        fbar,
+        deltaT,
+        deltaT0
+    );
+
+    update();
+}
+\end{lstlisting}
+
+Finally, the sixDoFElasticBodyMotion class is also responsible for determining the displacement of each mesh node according to the current motion state of the body, the initial state of the mesh and a scalar field (which scales the motion of the body when transferring it to the mesh nodes).
+
+\begin{lstlisting}
+Foam::tmp<Foam::pointField> Foam::sixDoFElasticBodyMotion::transform
+(
+    const pointField& initialPoints,
+    const scalarField& scale
+) const
+{
+    tmp<pointField> tpoints(new pointField(initialPoints));
+    pointField& points = tpoints.ref();
+
+    scalarField dist0(nNode(), Zero);
+
+    for (label indi = 1; indi < nNode(); indi++)
+    {
+        dist0[indi] = dist0[indi-1] + length()[indi-1];
+    }
+
+    const Field<vector6D> displacement0(u());
+    const scalarField dist((initialPoints-origin())&direction());
+    const Field<vector6D> displacement(interpolateXY(dist, dist0, displacement0));
+
+    forAll(points, pointi)
+    {
+        const vector initialCentreOfRotation = origin()+dist[pointi]*direction();
+
+        septernion s
+        (
+            displacement[pointi].v(),
+            quaternion(rotationTensor(-displacement[pointi].w()))
+        );
+
+        // Move non-stationary points
+        if (scale[pointi] > small)
+        {
+            // Use solid-body motion where scale = 1
+            if (scale[pointi] > 1 - small)
+            {
+                points[pointi] =
+                    initialCentreOfRotation
+                  + s.invTransformPoint
+                    (
+                        initialPoints[pointi]
+                      - initialCentreOfRotation
+                    );
+            }
+            else
+            {
+                septernion ss(slerp(septernion::I, s, scale[pointi]));
+
+                points[pointi] =
+                    initialCentreOfRotation
+                  + ss.invTransformPoint
+                    (
+                        initialPoints[pointi]
+                      - initialCentreOfRotation
+                    );
+            }
+        }
+    }
+
+    return tpoints;
+}
+\end{lstlisting}
+
+\subsection{sixDoFElasticBodyMotionSolver}
+
+The sixDoFElasticBodyMotionSolver class is a derived class of the displacementMotionSolver class. It computes the forces and moments acting on each beam element (by calling a function object named as `binnedForces' which will be discussed later), provides these information to the sixDoFElasticBodyMotion class and updates the dynamic finite volume mesh based on the displacements of all mesh nodes returned from the member function `transform' in the sixDoFElasticBodyMotion class.
+
+\begin{lstlisting}
+    dictionary binData;    
+
+    binData.add("direction", motion_.direction());
+    binData.add("nBin", motion_.nNode()-1);
+    binData.add("binMin", motion_.origin()&motion_.direction());
+    binData.add("binDx", motion_.length());
+    binData.add("cumulative", false);
+
+    dictionary forcesDict;
+
+    forcesDict.add("type", functionObjects::binnedForces::typeName);
+    forcesDict.add("patches", patches_);
+    forcesDict.add("rhoInf", rhoInf_);
+    forcesDict.add("rho", rhoName_);
+    forcesDict.add("CofR", motion_.origin());
+    forcesDict.add("binData", binData);
+
+    functionObjects::binnedForces f("forces", db(), forcesDict);
+
+    f.calcForcesMoment();
+
+    motion_.update
+    (
+        firstIter,
+        f.binnedForceEff(),
+        f.binnedMomentEff(),
+        t.deltaTValue(),
+        t.deltaT0Value()
+    );
+    
+    if (coupling_)
+    {
+        // Update the displacements
+        pointDisplacement_.primitiveFieldRef() =
+        motion_.transform(points0(), scale_) - points0();
+
+        // Displacement has changed. Update boundary conditions
+        pointConstraints::New
+        (
+            pointDisplacement_.mesh()
+        ).constrainDisplacement(pointDisplacement_);
+    }
+\end{lstlisting}
+
+The sixDoFElasticBodyMotionSolver class also determines the scalar field mentioned in the previous sub-section, which scales the motion of the body when calculating the displacement of mesh nodes, using the following lines
+
+\begin{lstlisting}
+    {
+        const pointMesh& pMesh = pointMesh::New(mesh);
+
+        pointPatchDist pDist(pMesh, patchSet_, points0());
+        
+        // Scaling: 1 up to di then linear down to 0 at do away from patches
+        scale_.primitiveFieldRef() =
+            min
+            (
+                max
+                (
+                    (do_ - pDist.primitiveField())/(do_ - di_),
+                    scalar(0)
+                ),
+                scalar(1)
+            );
+
+        // Convert the scale function to a cosine
+        scale_.primitiveFieldRef() =
+            min
+            (
+                max
+                (
+                    0.5
+                  - 0.5
+                   *cos(scale_.primitiveField()
+                   *Foam::constant::mathematical::pi),
+                    scalar(0)
+                ),
+                scalar(1)
+            );
+
+        pointConstraints::New(pMesh).constrain(scale_);
+        scale_.write();
+    }
+\end{lstlisting}
+
+\noindent This process requires the input of two scalar variables with the keywords `innerDistance' and `outerDistance' defined in the file dynamicMeshDict.
+
+\subsection{threeDoFElasticBodyMotionSolver}
+
+The threeDoFElasticBodyMotionSolver class can be considered as a simplified version of the sixDoFElasticBodyMotionSolver class. It is used to model an elastic beam which has only three degrees of freedom (i.e., the translations in the $x$, $y$ and $z$ directions) at each node.
+
+\subsection{fourDoFElasticBodyMotionSolver}
+
+The fourDoFElasticBodyMotionSolver class can also be considered as a simplified version of the sixDoFElasticBodyMotionSolver class. It is used to model an elastic beam which has four degrees of freedom (i.e., the translations in the $x$, $y$ and $z$ directions, and the rotation about the $z$ axis) at each node.
+     
+\subsection{vector6D}
+
+The vector6D class is mainly designed to store the six degrees of freedom of the considered elastic beam model at a specific node. It contains two private vector variables with the keywords `v' and `w', respectively. The variable `v' is a three-component vector that can be used to store the translations in the $x$, $y$ and $z$, while the variable `w' is a three-component vector that can be used to store the rotations about the $x$, $y$ and $z$ axes. The vector6D class can also be employed to store the mass and moment of inertia of a lumped mass system.
+
+\begin{lstlisting}
+class vector6D
+{
+    // private data
+
+        //- First vector part of the vector6D
+        vector v_;
+
+        //- Second vector part of the vector6D
+        vector w_;
+
+    // Constructors
+
+        //- Construct null
+        inline vector6D();
+
+        //- Construct given two vector parts
+        inline vector6D(const vector& v, const vector& w);
+
+        //- Construct from Istream
+        vector6D(Istream&);
+
+    // Member functions
+
+           // Access
+
+               //- First vector part of the vector6D
+               inline const vector& v() const;
+
+               //- Second vector part of the vector6D
+               inline const vector& w() const;
+               
+           // Edit
+
+               //- First vector part of the vector6D
+               inline vector& v();
+
+               //- Second vector part of the vector6D
+               inline vector& w();
+};
+\end{lstlisting}
+
+\noindent Taking a vector6D with all components equaling to zero as an example., The input/output format of the vector6D is as following
+
+\begin{lstlisting}
+((0 0 0)(0 0 0))
+\end{lstlisting}
+
+
+\subsection{binnedForces}
+
+The binnedForces class is a modified class of the forces class of OpenFOAM. Note that the forces class is designed to calculate the forces and moments by integrating the pressure and skin-friction forces over a given list of patches. Due to the demand of the nodal loads (rather than the total loads) acting on the elastic body as required by the calculation of the generalized load $\boldsymbol{P}(t)$, the forces and moments have to be binned during the simulation. Even though the original forces class provides a similar utility, it dose not offer a public member function that directly returns the binned forces upon calling. Also note that the sizes of the bins are universal in the forces class. Therefore, we create a modified class, i.e., the binnedForces class, which includes a public member function for the direct access of the binned forces and moments.
+
+\begin{lstlisting}
+Foam::List<Foam::vector> Foam::functionObjects::binnedForces::binnedForceEff() const
+{
+    return force_[0] + force_[1] + force_[2];
+}
+
+Foam::List<Foam::vector> Foam::functionObjects::binnedForces::binnedMomentEff() const
+{
+    return moment_[0] + moment_[1] + moment_[2];
+}
+\end{lstlisting}
+
+\noindent  Also note that the sizes of bins can be different and defined through a variable with the keyword `binDx' (which is a list of scalars).
+
+
+

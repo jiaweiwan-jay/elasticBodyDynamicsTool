@@ -1,0 +1,136 @@
+\documentclass{simcenterdocumentation}
+\usepackage{amsmath,amssymb}
+\usepackage{mathtools}
+\usepackage{biblatex}
+\usepackage{amsthm}
+\usepackage{mathtools}
+\usepackage{cases}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{graphicx}
+\usepackage{subcaption}
+\usepackage{appendix}
+\usepackage{color}
+\usepackage{hyperref}
+\usepackage{array}
+\usepackage{float}
+\usepackage{booktabs}
+\usepackage{adjustbox}
+
+% To compile this file, run "latex/pdflatex EBD-documentation", then "biber EBD-documentation"
+% (or "bibtex EBD-documentation", if the output from latex asks for that instead),
+% and then "latex/pdflatex EBD-documentation" (without the quotes in each case).
+
+% Double spacing, if you want it.  Do not use for the final copy. Can also specify
+% draft as a document class option. This will generate double spacing and placeholders
+% for title page and header images
+%% \def\dsp{\def\baselinestretch{2.0}\large\normalsize}
+%% \dsp
+
+\usepackage{listings}
+\usepackage{color}
+
+\definecolor{dkgreen}{rgb}{0,0.6,0}
+\definecolor{gray}{rgb}{0.5,0.5,0.5}
+\definecolor{mauve}{rgb}{0.58,0,0.82}
+\definecolor{lightgrey}{rgb}{0.95,0.95,0.95}
+\definecolor{darkgrey}{rgb}{0.50,0.50,0.50}
+
+\lstset{
+  frame=shadowbox, 
+  language=C,
+  aboveskip=3mm,
+  belowskip=3mm,
+  showstringspaces=false,
+  columns=flexible,
+  basicstyle={\small\ttfamily},
+  numbers=none,
+  numberstyle=\tiny\color{gray},
+  keywordstyle=\color{blue},
+  commentstyle=\color{dkgreen},
+  stringstyle=\color{mauve},
+  breaklines=true,
+  breakatwhitespace=true,
+  tabsize=3,
+  rulesepcolor=\color{darkgrey},
+  backgroundcolor=\color{lightgrey}
+}
+
+\graphicspath{%
+              {figs},%
+	      {images/},%
+	      {theory},%
+	      {theory/figs}%
+	     }
+
+\input{macros}
+
+
+\bibliography{references}
+
+\begin{document}
+% Declarations for Front Matter
+% Software title followed by optional second line
+\title{EBD\\ \Large Elastic Body Dynamics}
+% Use superscripts to indicate author affiliations
+\author{Jiawei Wan$^{1}$, Peter Mackenzie-Helnwein$^2$}
+\institutions{$^1$University of Notre Dame \\$^2$University of Washington}
+\softwarename{Elastic Body Dynamics}
+\softwareversion{1.0.0}
+
+%%% DON'T MESS WITH THESE SETTINGS %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\hypersetup{pageanchor=false}
+\maketitle
+\copyrightpage
+\acknowledgments
+
+\hypersetup{pageanchor=true}
+\begin{frontmatter}
+
+\pagestyle{plain}
+{
+  \renewcommand{\thispagestyle}[1]{}
+  \tableofcontents
+  \clearpage
+  \listoffigures
+  %\clearpage
+  %\listoftables
+}
+
+\end{frontmatter}
+\pagestyle{somewhatsimple}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Create separate tex files for each chapter and provide them as inputs
+
+\chapter{Tool Audience}
+\input{chap1}
+
+\chapter{Introduction}
+\input{chap2}
+
+\chapter{Installation Instructions}
+\input{chap3}
+
+\chapter{Theory}
+\input{chap4}
+
+\chapter{Usage}
+\input{chap5}
+
+\chapter{Demonstration}
+\input{chap6}
+
+
+%\chapter{User Training}
+
+
+% \appendix
+% \chapter{More Monticello Candidates}
+
+\pagestyle{plain}
+{
+  \renewcommand{\thispagestyle}[1]{}
+  \printbibliography           
+}
+
+\end{document}

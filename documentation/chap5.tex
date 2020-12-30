@@ -1,0 +1,44 @@
+\label{sec:EBD-usage}
+
+\section{Workflow}
+
+\section{Parameters}
+
+For the use of the elasticbodyDynamics library, all entries requiring specifications mainly in OpenFOAM project files are summarized in Table \ref{parametersTable}. The first three entries should be specified in the file \$startTime/uniform/generalizedMotionState where \$startTime denotes the starting time-instant of the simulation, while the rest of the entries should be included in the file constant/dynamicMeshDict. The `motionSolver' entry requires the specification of a particular motion solver, which, in EBD, takes the option of threeDoFElasticBodyMotion, fourDoFElasticBodyMotion or sixDoFElasticBodyMotion. When threeDoFElasticBodyMotion is used, the entries `mass' and `mode\$i' should be specified as a list of three-component vectors. When sixDoFElasticBodyMotion is used, the entries `mass' and `mode\$i' should be specified as a list of six-component vectors (using the keyword `vector6D'), and similarly for fourDoFElasticBodyMotion.
+
+Apart from the two files mentioned above, another file named as `pointDisplacement' should be created inside the folder \$startTime. This file is employed to stores the displacements of all mesh nodes and their boundary conditions. An example of pointDisplacement will be later demonstrated in Chapter~\ref{sec:EBD-demonstration}.
+
+\begin{table}
+\small
+\caption{Entries requiring specifications in the files \$startTime/uniform/generalizedMotionState and constant/dynamicMeshDict} \label{parametersTable}
+\begin{adjustbox}{angle=90}
+\begin{tabular}{l|p{3.5cm}|l|p{6.5cm}}
+\hline
+entry name & type & default values & description \\
+\hline
+ubar & List$<$scalar$>$ & list$::$zero & generalized displacements \\
+vbar & List$<$scalar$>$ & list$::$zero & generalized velocities \\
+vbar & List$<$scalar$>$ & list$::$zero & generalized accelerations \\
+\hline
+dynamicFvMesh & word & dynamicMotionSolverFvMesh & dynamicFvMesh selection\\
+motionSolverLibs & library & libelasticBodyDynamics.so & load the custom motion solver library \\
+motionSolver & word & --- & a specific motion solver \\
+coupling & bool & true & coupling switch \\
+innerDistance & scalar & --- & distance within which mesh moves with the body \\
+outerDistance & scalar & --- & distance outside which mesh stays static \\
+rhoInf & scalar & --- & density of fluid\\
+solver & word & --- & time scheme for the motion equation of the body \\
+patches & List$<$word$>$ & --- & patch list associated with the surface of the body \\
+origin & vector & vector::zero & origin of the beam model \\
+direction & vector & (0 0 1) & direction of the beam model \\
+nNode & int & --- & number of nodes on the beam \\
+nMode & int & --- & number of vibration modes considered \\
+frequency & List$<$scalar$>$ & --- & natural frequency of each vibration mode \\
+length & List$<$scalar$>$ & --- & length of each beam element \\
+dampingRatio & List$<$scalar$>$ & --- & damping ratio of each vibration mode \\
+mass & List$<$vector$>$ or List$<$vector4D$>$ or List$<$vector6D$>$ & --- & lumped mass at each node  \\
+mode\$i & List$<$vector$>$ or List$<$vector4D$>$ or List$<$vector6D$>$ & --- & shape of the $i$-th vibration mode \\
+\hline
+\end{tabular} 
+\end{adjustbox}
+\end{table}

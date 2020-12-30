@@ -1,0 +1,23 @@
+%% Chapter: Introduction
+
+The Elastic Body Dynamics Tool (EBD) is designed to collect all required properties and parameters
+needed for modeling the aeroelastic behavior of an deformable body immersed in surrounding fluids using the OpenFOAM, and to augment an OpenFOAM model by adding the necessary sections to respective parameter definition files. The generic workflow involved is as follows.
+
+\begin{enumerate}
+\item
+   Build your OpenFOAM model as you would without using the elastic body dynamics library. 
+   
+\item
+   Run EBD following, identify your model folder, adjust the parameters as desired, and export to your model definition. Consult Chapter~\ref{sec:EBD-theory} for details on those steps.
+   
+\item
+    Run the updated model using the dynamic finite volume mesh solver provided by EBD.
+    
+\end{enumerate}
+
+\noindent The tool also provides a Save to file and Open from file functionality that will allow you to
+define and share complex sets of settings and parameters required by the usage of EBD, such, efficiently and reliably apply the same parameters to several different models.
+
+%% leave this as overview
+
+The following Chapter~\ref{sec:EBD-installation} explains the installation of the tool. Chapter~\ref{sec:EBD-theory} provides a detailed theoretical background and code implementation of the tool.  Chapter~\ref{sec:EBD-usage} summarizes the work-flow and required parameters of the tool. Chapter~\ref{sec:EBD-demonstration} demonstrates two numerical examples on the implementation of the tool.
